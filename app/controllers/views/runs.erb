@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>List of all registered runs</title>
+  </head>
+  <body>
+    <p>
+      Runs
+    </p>
+    <table>
+    <% @runs.each do |run| %>
+    <tr>
+      <td>Name</td>
+      <td><%= run.name %></td>
+      <td><%= run.libraries.length %> <a href='<%= "runs/#{run.id}/libraries" %>'>Libraries</a></td>
+      <td>
+        
+      </td>
+      <td>
+        <a href='<%= "runs/#{run.id}/create_job/1" %>'>Analyse</a>
+      </td>
+    <% end %>
+    </table>
+  </body>
+</html>

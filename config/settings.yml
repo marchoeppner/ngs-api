@@ -1,0 +1,2 @@
+# This is the base directory of where you store your Illumina output folders
+run_dir: "/mnt/share/volume1/work/ngs/runs/"

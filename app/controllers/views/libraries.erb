@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>List of all libraries</title>
+  </head>
+  <body>
+    <p>
+      Run <%= @run.name %>
+    </p>
+    <table>
+    <% @libraries.each do |lib| %>
+    <tr>
+      <td>Name</td>
+      <td><%= lib.name %></td>
+    <% end %>
+    </table>
+  </body>
+</html>
