@@ -11,20 +11,6 @@ require 'rest_client'
 require 'json'
 require 'fileutils'
 
-module Slurm
-
-    class Job
-        
-        attr_accessor :file, :meta
-
-        def initialize(sfile)
-            @file = sfile
-            @meta = {}
-            @job_id = null
-        end
-
-    end
-end
 
 def rest_get(url)
 	
@@ -92,6 +78,7 @@ def build_slurm_script(job)
 
     command = job["command"]
     sbatch_boilerplate = [
+        "#!/bin/bash",
         "#SBATCH -J #{job['name']}",
         "#SBATCH --nodes=1",
         "#SBATCH --time=10:00:00",
@@ -101,20 +88,38 @@ def build_slurm_script(job)
         "#SBATCH --cpus-per-task=1"
     ]
 
-    s = File.new("sbatch.sh", "w+")
+    s = File.new("slurm.sh", "w+")
     sbatch_boilerplate.each {|l| s.puts l }
     s.puts command
+    s.close
+
+    return "slurm.sh"
+
+end
+
+def submit_job(file)
+
+    slurm_id = `sbatch #{file}`.slice(/\d+/)
+    return slurm_id.to_i
+
+end
+
+def get_status(slurm_id)
+
+    status = `scontrol show job #{slurm_id}`
+    
+    if status == ""
+        return "unkown"
+    else
+        job_state = status.slice(/JobState=[A-Z]*/).split("=")[-1].downcase
+        return job_state
+    end
 
 end
 
 ### Get the script arguments and open relevant files
 options = OpenStruct.new()
 opts = OptionParser.new()
-opts.on("-l","--list","Get list of runs") {|argument| options.list = argument }
-opts.on("-r","--register","Register runs and libraries") {|argument| options.register = argument }
-opts.on("-i","--id","=ID", "Get run by id") {|argument| options.id = argument }
-opts.on("-p","--pipeline","=PIPELINE", "Pipeline to use") {|argument| options.pipeline = argument }
-opts.on("-o","--outfile", "=OUTFILE","Output file") {|argument| options.outfile = argument }
 opts.on("-h","--help","Display the usage information") {
     puts opts
     exit
@@ -128,25 +133,45 @@ pipeline_profile = "lsh"
 
 jobs = rest_get("jobs")
 
+this_date = Time.now.strftime("%d-%m-%Y")
+
 jobs.each do |job|
 
+    # a new job, needs to be submitted
     if job["status"] == "created"
-        warn "Found a new job (#{job['name']})"
+        warn "Found a new job (#{job['name']}), submitting..."
+        job_id = nil
         Dir.chdir(job["run_dir"]) do |dir|
-            build_slurm_script(job)
-        end
-        # submitting job
-        payload = { "attempts" => 1 }
+            file = build_slurm_script(job)
+            job_id = submit_job(file)
+        end  
+        payload = { "attempts" => 1 , "status" => "submitted", "slurm_id" => job_id }
         rest_post("jobs/#{job['id']}/update", payload)
-    elsif job["status"] == "complete"
-        # do nothing
-
+    # a submitted job, check status
+    elsif [ "running", "pending", "submitted" ].include?(job["status"])
+        warn "Active job #{job['slurm_id']}, updating status..."
+        status = get_status(job["slurm_id"])
+        payload = { "status" => status, "date_updated" => this_date}
+        rest_post("jobs/#{job['id']}/update", payload)
+    # job failed, check if it can be re-submitted 
     elsif job["status"] == "failed"
+        warn "Failed job #{job['slurm_id']}..."
         if job["attempts"] < 3
-            # Re-submit
+            warn "\tResubmitting!"
+            job_id = nil
+            Dir.chdir(job["run_dir"]) do |dir|
+                job_id = submit_job("slurm.sh")
+            end  
             attempts = job["attempts"].to_i+1
-            payload = { "attempts" =>  attempts }
+            payload = { "slurm_id" => job_id, "attempts" => attempts, "status" => "submitted", "date_updated" => this_date }
             rest_post("jobs/#{job['id']}/update", payload)
+        end
+    elsif job["status"] == "completed"
+        # remove the work directory
+        wd = "#{job['run_dir']}/work"
+        if File.directory?(wd)
+            system("rm -Rf #{wd}")
         end
     end
 end
+

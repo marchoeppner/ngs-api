@@ -7,10 +7,17 @@
       Run <%= @run.name %>
     </p>
     <table>
+    <tr>
+    <th>Library ID</th>
+    <th>Lane</th>
+    <th>R1</th>
+    <th>R2</th>
     <% @libraries.each do |lib| %>
     <tr>
-      <td>Name</td>
       <td><%= lib.name %></td>
+      <td><%= lib.lane %></td>
+      <td><%= lib.R1 %></td>
+      <td><%= lib.R2 %></td>
     <% end %>
     </table>
   </body>

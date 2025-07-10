@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>List of all jobs</title>
+  </head>
+  <body>
+    <p>
+      Processing jobs
+    </p>
+    <table>
+    <tr>
+      <th>Run</th>
+      <th>Pipeline</th>
+      <th>Status</th>
+      <th>Last updated</th>
+      <th>Results</th>
+      <th></td>
+    </tr>
+    <% @jobs.each do |job| %>
+    <tr>
+      <td><%= job.run.name %></td>
+      <td><%= job.pipeline.name %></td>
+      <% if job.status == "completed" %>
+        <% color = "lightgreen" %>
+      <% elsif job.status == "failed" %>
+        <% color = "Salmon" %>
+      <% elsif job.status == "running" %>
+        <% color = "Moccasin" %>
+      <% elsif job.status == "submitted" %>
+        <% color = "LightSteelBlue" %>
+      <% else %>
+        <% color = "grey" %>
+      <% end %>
+      <td bgcolor=<%= color %>><%= job.status %></td>
+      <td><%= job.date_updated %></td>
+      <% if job.status == "completed" || job.status == "failed" %>
+        <td><a href="file://<%= job.run_dir %>" target="_blank" >link</a></td>
+      <% else %>
+        <td></td>
+      <% end %>
+      <td>
+      <form onsubmit="return confirm('Sollen dieser Job und alle Ergebnisse gelöscht werden?')" action="/jobs/<%= job.id %>/delete" method="GET">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit">Delete</button>
+      </form>
+      </td>
+    </tr>
+    <% end %>
+    </table>
+  </body>
+</html>

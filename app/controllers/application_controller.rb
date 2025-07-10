@@ -3,8 +3,8 @@ require 'sinatra/base'
 class NGS < Sinatra::Base
 
     configure do
-        set :illumina_run_dir, '/mnt/share/volume1/work/ngs/runs'
-        set :pipeline_run_dir, '/mnt/share/volume1/work/run_dir'
+        set :illumina_run_dir, '/work_syn/ngs/runs/miseq'
+        set :pipeline_run_dir, '/work_syn/ngs/analyses'
         set :pipeline_profile, 'lsh'
     end
     
@@ -19,9 +19,14 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard' do
-        @runs = NGS::Run.all
+        @runs = NGS::Run.all.reverse
         @pipelines = NGS::Pipeline.all
         erb :runs
+    end
+
+    get '/dashboard/jobs' do
+        @jobs = NGS::Job.all.reverse
+        erb :jobs
     end
 
     get '/dashboard/runs/:id/libraries' do |id|
@@ -36,7 +41,7 @@ class NGS < Sinatra::Base
 
     get '/runs/register' do
         answer = [] # A list of all the newly added directories, if any
-        dirs = Dir["#{settings.illumina_run_dir}/*"]
+        dirs = Dir["#{settings.illumina_run_dir}/*"].select{|f| File.directory?(f) }
         dirs.each do |dir|
             # If this run directory has not been added to the database, do it now. 
             run = NGS::Run.find_by_folder(dir)
@@ -50,11 +55,10 @@ class NGS < Sinatra::Base
         return answer.to_json
     end
     
-    get '/runs/delete' do
-        NGS::Run.all.each do |run|
-            run.destroy
-        end
-        "All runs deleted"
+    get '/runs/:id/delete' do |id|
+        run = NGS::Run.find(id)
+        run.destroy
+        "Run deleted"
     end
 
     get '/runs/:id' do |id|
@@ -110,31 +114,42 @@ class NGS < Sinatra::Base
             { "error" => "Pipeline with id #{params['pipeline_id']} not found" }
         end
 
+        if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?
+            return "This job already exists"
+        end
         # Construct the pipeline call
-        command = "#{pipeline['template']} -profile #{settings.pipeline_profile} -r #{pipeline.version} --input samples.tsv --run_name #{run.name}"
+        command = "#{pipeline['template']} -profile #{settings.pipeline_profile} -r #{pipeline.version} --run_name #{run.name}"
 
         this_date = Time.now.strftime("%d-%m-%Y")
 
         # Create the run directory
-        wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{this_date}"
+        wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{pipeline.name}/#{this_date}"
         FileUtils.mkdir_p(wpath)
 
-        # Make the samplesheet
-        rows = [ pipeline.samplesheet_format ]
-        run.libraries.each do |lib|
-            rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
+        if pipeline.samplesheet_format
+            # Make the samplesheet
+            rows = [ pipeline.samplesheet_format ]
+            run.libraries.each do |lib|
+                next if lib.name.include?("Undetermined") or lib.name.include?("NegCtrl")
+                rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
+            end
+            ss_name = "#{wpath}/samples.tsv"
+            ss = File.new(ss_name, "w+")
+            rows.each { |r| ss.puts r }
+            ss.close
+            command = "#{command} --input samples.tsv"
+        else # the folder itself is the input
+            command = "#{command} --input #{run.folder}"
         end
-        ss_name = "#{wpath}/samples.tsv"
-        ss = File.new(ss_name, "w+")
-        rows.each { |r| ss.puts r }
-        ss.close
 
         payload = { 
             "name" => "#{run.name}_#{pipeline.name}_#{this_date}", 
             "command" => command, 
             "run_dir" => wpath,
             "status" => "created",
-            "date_registered" => this_date 
+            "date_registered" => this_date,
+            "run_id" => run.id, 
+            "pipeline_id" => pipeline.id 
         }
     
         job = NGS::Job.create(payload)
@@ -206,7 +221,6 @@ class NGS < Sinatra::Base
 
     post '/jobs/:id/update' do |id|
         job = NGS::Job.find(id)
-        warn job.inspect
         if job
             job.update(params)
             return job.to_json
@@ -218,6 +232,7 @@ class NGS < Sinatra::Base
     get '/jobs/:id/delete' do |id|
         job = NGS::Job.find(id)
         if job
+            FileUtils.rm_rf(job.run_dir)
             job.destroy
             "Job deleted"
         else

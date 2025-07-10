@@ -3,22 +3,36 @@
     <title>List of all registered runs</title>
   </head>
   <body>
-    <p>
-      Runs
+     <p> 
+    <a href="/runs/register">Nach neuen Läufen suchen</a>
     </p>
     <table>
+    <tr>
+    <th>Name</th>
+    <th># Libraries</th>
+    <th colspan=<%= @pipelines.length %>>Pipelines</th>
+    <th></th>
+    </tr>
     <% @runs.each do |run| %>
     <tr>
-      <td>Name</td>
       <td><%= run.name %></td>
-      <td><%= run.libraries.length %> <a href='<%= "runs/#{run.id}/libraries" %>'>Libraries</a></td>
-      <td>
-        
+      <td><a href='<%= "dashboard/runs/#{run.id}/libraries" %>'><%= run.libraries.length %></a></td>
+      <td> 
       </td>
+      <% @pipelines.each do |pipeline| %>
+        <td>
+          <a href='<%= "runs/#{run.id}/create_job/#{pipeline.id}" %>'><%= pipeline.name %></a>
+        <td>
+      <% end %>
       <td>
-        <a href='<%= "runs/#{run.id}/create_job/1" %>'>Analyse</a>
+        <form onsubmit="return confirm('Soll dieser Lauf aus der Liste gelöscht werden?')" action="/runs/<%= run.id %>/delete" method="GET">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit">Delete</button>
+      </form>
       </td>
+    </tr>
     <% end %>
+    
     </table>
   </body>
 </html>
