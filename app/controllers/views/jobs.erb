@@ -19,18 +19,7 @@
     <tr>
       <td><%= job.run.name %></td>
       <td><%= job.pipeline.name %></td>
-      <% if job.status == "completed" %>
-        <% color = "lightgreen" %>
-      <% elsif job.status == "failed" %>
-        <% color = "Salmon" %>
-      <% elsif job.status == "running" %>
-        <% color = "Moccasin" %>
-      <% elsif job.status == "submitted" %>
-        <% color = "LightSteelBlue" %>
-      <% else %>
-        <% color = "grey" %>
-      <% end %>
-      <td bgcolor=<%= color %>><%= job.status %></td>
+      <td bgcolor=<%= @color_by_status[job.status] %>><%= job.status %></td>
       <td><%= job.date_updated %></td>
       <% if job.status == "completed" || job.status == "failed" %>
         <td><a href="file://<%= job.run_dir %>" target="_blank" >link</a></td>

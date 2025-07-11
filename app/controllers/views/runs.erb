@@ -1,4 +1,4 @@
-<html>
+  <html>
   <head>
     <title>List of all registered runs</title>
   </head>
@@ -6,33 +6,33 @@
      <p> 
     <a href="/runs/register">Nach neuen Läufen suchen</a>
     </p>
+    <% color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin"} %>
     <table>
     <tr>
-    <th>Name</th>
-    <th># Libraries</th>
-    <th colspan=<%= @pipelines.length %>>Pipelines</th>
-    <th></th>
+      <th>Name</th>
+      <th># Libraries</th>
+      <th colspan=<%= @pipelines.length %>>Pipelines</th>
+      <th></th>
     </tr>
     <% @runs.each do |run| %>
-    <tr>
-      <td><%= run.name %></td>
-      <td><a href='<%= "dashboard/runs/#{run.id}/libraries" %>'><%= run.libraries.length %></a></td>
-      <td> 
-      </td>
-      <% @pipelines.each do |pipeline| %>
+      <tr>
+        <td><%= run.name %></td>
+        <td><a href='<%= "dashboard/runs/#{run.id}/libraries" %>'><%= run.libraries.length %></a></td>
+        <% @pipelines.each do |pipeline| %>
+          <% if run.pipelines.include?(pipeline) %>
+            <td bgcolor=<%= @color_by_status[run.jobs.find{|j| j.pipeline_id == pipeline.id}.status] %>><%= pipeline.name %></td>
+          <% else %>
+            <td><a href='<%= "runs/#{run.id}/create_job/#{pipeline.id}" %>'><%= pipeline.name %></a></td>
+          <% end %>
+        <% end %>
         <td>
-          <a href='<%= "runs/#{run.id}/create_job/#{pipeline.id}" %>'><%= pipeline.name %></a>
-        <td>
-      <% end %>
-      <td>
-        <form onsubmit="return confirm('Soll dieser Lauf aus der Liste gelöscht werden?')" action="/runs/<%= run.id %>/delete" method="GET">
-          <input type="hidden" name="_method" value="DELETE">
-          <button type="submit">Delete</button>
-      </form>
-      </td>
-    </tr>
+          <form onsubmit="return confirm('Soll dieser Lauf aus der Liste gelöscht werden?')" action="/runs/<%= run.id %>/delete" method="GET">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
     <% end %>
-    
     </table>
   </body>
 </html>

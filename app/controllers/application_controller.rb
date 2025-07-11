@@ -1,5 +1,21 @@
 require 'sinatra/base'
 
+def is_skippable(name)
+
+    answer = false
+    if name.include?("Undetermin")
+        return true
+    elsif name.include?("NegCtr")
+        return true
+    elsif name.include?("NegKont")
+        return true
+    end
+
+    return answer
+
+end
+
+
 class NGS < Sinatra::Base
 
     configure do
@@ -19,12 +35,14 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard' do
+        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white"} 
         @runs = NGS::Run.all.reverse
         @pipelines = NGS::Pipeline.all
         erb :runs
     end
 
     get '/dashboard/jobs' do
+        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white"} 
         @jobs = NGS::Job.all.reverse
         erb :jobs
     end
@@ -130,8 +148,12 @@ class NGS < Sinatra::Base
             # Make the samplesheet
             rows = [ pipeline.samplesheet_format ]
             run.libraries.each do |lib|
-                next if lib.name.include?("Undetermined") or lib.name.include?("NegCtrl")
-                rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
+                next if is_skippable(lib.name)
+                if pipeline.samplesheet_format.include?("platform")
+                    rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
+                else
+                    rows << [ lib.name, lib.R1, lib.R2 ].join("\t")
+                end
             end
             ss_name = "#{wpath}/samples.tsv"
             ss = File.new(ss_name, "w+")
@@ -192,11 +214,14 @@ class NGS < Sinatra::Base
         { "error" => "Pipeline already exists" }.to_json
     end
 
-    get '/pipelines/delete' do
-        NGS::Pipeline.all.each do |pipe|
-            pipe.delete
+    get '/pipelines/:id/delete' do |id|
+        pipe = NGS::Pipeline.find(id)
+        if pipe
+            pipe.destroy
+            "Pipeline deleted!"
+        else
+            "Pipeline not found, nothing to do."
         end
-        "All pipelines deleted"
     end
 
     get '/jobs' do
@@ -224,6 +249,15 @@ class NGS < Sinatra::Base
         if job
             job.update(params)
             return job.to_json
+        else
+            { "error" => "Job does not exist." }
+        end
+    end
+
+    post '/jobs/:id/update/log' do |id|
+        job = NGS::Job.find(id)
+        if job
+            job.update({"log" => params }.to_json)
         else
             { "error" => "Job does not exist." }
         end
