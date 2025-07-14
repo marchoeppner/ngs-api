@@ -117,6 +117,29 @@ def get_status(slurm_id)
 
 end
 
+def find_report(job)
+
+    run_dir = job["run_dir"]
+
+    report = nil
+
+    if File.directory("#{job['run_dir']}/results/reports")
+        htmls = Dir["#{run_dir}/results/reports/*.html"]
+        if htmls.length > 1
+            report = htmls.find{|h| !h.include?("multiqc") && !h.include?("illumina") && !h.include?("nanopore")}
+        elsif htmls.length == 1
+            report = htmls.shift
+        end
+    end
+
+    if report
+        return File.expand_path(report)
+    else
+        return nil
+    end
+
+end
+
 ### Get the script arguments and open relevant files
 options = OpenStruct.new()
 opts = OptionParser.new()
@@ -171,6 +194,14 @@ jobs.each do |job|
         wd = "#{job['run_dir']}/work"
         if File.directory?(wd)
             system("rm -Rf #{wd}")
+        end
+        # if no report has been attached to this job, try and do that now
+        if !job["report"] && job["command"].include?("nextflow")
+            report = find_report(job)
+            if report
+                payload = { "report" => report }
+                rest_post("jobs/#{job['id']}/update", payload)
+            end
         end
     end
 end

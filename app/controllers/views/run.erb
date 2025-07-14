@@ -3,34 +3,47 @@
     <title>Run Infos</title>
   </head>
   <body>   
-  <h2><%= @run.name %></h2>
-    </p>
-    <p>
-    Folder: <%= @run.folder %>
+    <h2><%= @run.name %></h2>
     </p>
     <table>
-      <tr>
-        <td>Libraries</td>
-        <td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>
-        <td>Deactivated: <%= @run.libraries.select {|l| !l.active }.length %> </td>
-      </tr>
+    <tr>
+      <td>Folder</td><td><%= @run.folder %></td>
+    </tr>
+    <tr>
+      <td>Libraries</td><td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>
+    </tr>
+    <tr>
+      <td>Deactivated</td><td><%= @run.libraries.select {|l| !l.active }.length %></td>
+    </tr>
     </table>
-    </p>
+
+    <p></p>
+
     <table>
       <tr>
         <th>Pipeline</th>
+        <th>Description</th>
         <th>Status</th>
-        <th>Link</th>
+        <th>Date</th>
+        <th>Results</th>
+        <th>Report</th>
       </tr>
       <% @run.jobs.each do |job| %>
         <tr>
           <td><%= job.pipeline.name %></td>
+          <td><%= job.pipeline.description %></td>
           <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
+          <td><%= job.date_updated %></td>
           <td>
           <% if job.status == "completed" || job.status == "failed" %>
             <a href="file://<%= job.run_dir %>" target="_blank" >link</a>
           <% end %>
           </td>
+          <% if job.report %>
+            <td><a href='<%= "file://#{job.report}"%>' target="_blank">open</td>
+          <% else %>
+            <td></td>
+          <% end %>
         </tr>
       <% end %>
   </body>

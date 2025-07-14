@@ -129,7 +129,7 @@ class NGS < Sinatra::Base
         end
 
         if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?
-            return "This job already exists"
+            "This job already exists"  
         end
         # Construct the pipeline call
         if pipeline.name.include?("backup")
