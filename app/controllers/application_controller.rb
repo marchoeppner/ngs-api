@@ -17,8 +17,9 @@ def is_skippable(name)
 
 end
 
-
 class NGS < Sinatra::Base
+
+    color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
 
     enable :sessions
 
@@ -39,7 +40,7 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard' do
-        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
+        @color_by_status = color_by_status
         @runs = NGS::Run.all.reverse
         @pipelines = NGS::Pipeline.all
         @success_message = session[:success_message]
@@ -48,7 +49,7 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard/jobs' do
-        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
+        @color_by_status = color_by_status
         @jobs = NGS::Job.all.reverse
         erb :jobs
     end
@@ -60,7 +61,7 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard/runs/:id' do |id|
-        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
+        @color_by_status = color_by_status
         @run = NGS::Run.find(id)
         erb :run
     end
@@ -131,7 +132,11 @@ class NGS < Sinatra::Base
             return "This job already exists"
         end
         # Construct the pipeline call
-        command = "#{pipeline['template']} -profile #{settings.pipeline_profile} -r #{pipeline.version} --run_name #{run.name}"
+        if pipeline.name.include?("backup")
+            command = "#{pipeline['template']} --platform miseq"
+        else
+            command = "#{pipeline['template']} -profile #{settings.pipeline_profile} -r #{pipeline.version} --run_name #{run.name} -resume"
+        end
 
         this_date = Time.now.strftime("%d-%m-%Y")
 

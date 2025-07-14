@@ -90,7 +90,7 @@ def build_slurm_script(job)
 
     s = File.new("slurm.sh", "w+")
     sbatch_boilerplate.each {|l| s.puts l }
-    s.puts command + " -resume"
+    s.puts command
     s.close
 
     return "slurm.sh"
