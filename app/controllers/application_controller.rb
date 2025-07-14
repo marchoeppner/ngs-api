@@ -9,6 +9,8 @@ def is_skippable(name)
         return true
     elsif name.include?("NegKont")
         return true
+    elsif name.include?("Neg-Ktr")
+        return true
     end
 
     return answer
@@ -17,6 +19,8 @@ end
 
 
 class NGS < Sinatra::Base
+
+    enable :sessions
 
     configure do
         set :illumina_run_dir, '/work_syn/ngs/runs/miseq'
@@ -35,14 +39,16 @@ class NGS < Sinatra::Base
     end
 
     get '/dashboard' do
-        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white"} 
+        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
         @runs = NGS::Run.all.reverse
         @pipelines = NGS::Pipeline.all
-        erb :runs
+        @success_message = session[:success_message]
+        session[:success_message] = nil
+        erb :dashboard
     end
 
     get '/dashboard/jobs' do
-        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white"} 
+        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
         @jobs = NGS::Job.all.reverse
         erb :jobs
     end
@@ -51,6 +57,12 @@ class NGS < Sinatra::Base
         @run = NGS::Run.find(id)
         @libraries = @run.libraries
         erb :libraries
+    end
+
+    get '/dashboard/runs/:id' do |id|
+        @color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
+        @run = NGS::Run.find(id)
+        erb :run
     end
 
     get '/runs' do 
@@ -68,9 +80,15 @@ class NGS < Sinatra::Base
                 run = NGS::Run.create({ "folder" => dir, "platform" => "Illumina", "date_registered" => Time.now, "name" => name })
                 run.save
                 answer << run
+                run.register_libraries    
             end
         end
-        return answer.to_json
+        if answer.empty?
+            session[:success_message] = "Keine neuen Läufe gefunden."
+        else
+            session[:success_message] = "Erfolgreich #{answer.length} Läufe hinzugefügt."
+        end
+        redirect '/dashboard'
     end
     
     get '/runs/:id/delete' do |id|
@@ -91,31 +109,8 @@ class NGS < Sinatra::Base
     get '/runs/:id/libraries/register' do |id|
         answer = []
         run = NGS::Run.find(id)
-        # check if the requested run exists
-        if run
-            # group by library
-            data = Dir["#{run['folder']}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_L00[0-9]_R[1,2]/)[0]}
-            data.each do |lib,reads|
-                # group by lane
-                reads.group_by{|r| File.basename(r).slice(/L[0-9]*/) }.each do |b,fastqs|
-                    lane = b.split("L00")[-1]
-                    fwd = nil
-                    rev = nil
-                    if fastqs.length == 2
-                        fwd,rev = fastqs.sort
-                    else
-                        fwd = fastqs
-                    end
-                    if NGS::Library.where(R1: fwd, run_id: run.id, lane: lane).empty?
-                        payload = { "run_id" => run.id, "name" => lib, "R1" => fwd, "R2" => rev, "lane" => lane , "date_registered" => Time.now }
-                        l = NGS::Library.create(payload)
-                        l.save
-                        answer << l
-                    end
-                end
-            end
-        end
-        return answer.to_json
+        run.register_libraries
+        return run.libraries.to_json
     end
 
     get '/runs/:id/create_job/:pipeline_id' do 
@@ -148,7 +143,8 @@ class NGS < Sinatra::Base
             # Make the samplesheet
             rows = [ pipeline.samplesheet_format ]
             run.libraries.each do |lib|
-                next if is_skippable(lib.name)
+                # ReadQC should process all libraries; else mask certain types 
+                next if ( is_skippable(lib.name)  and !pipeline.name.include?("read-qc") ) or !lib.active
                 if pipeline.samplesheet_format.include?("platform")
                     rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
                 else
@@ -177,7 +173,7 @@ class NGS < Sinatra::Base
         job = NGS::Job.create(payload)
         job.save
 
-        return job.to_json
+        redirect '/dashboard'
 
     end
 
@@ -202,6 +198,23 @@ class NGS < Sinatra::Base
         end
     end
 
+    get '/libraries/:id/deactivate' do |id|
+        lib = NGS::Library.find(id)
+        if lib
+            lib.active = false
+            lib.save
+        end
+        redirect "/dashboard/runs/#{lib.run.id}/libraries"
+    end
+    get '/libraries/:id/activate' do |id|
+        lib = NGS::Library.find(id)
+        if lib
+            lib.active = true
+            lib.save
+        end
+        redirect "/dashboard/runs/#{lib.run.id}/libraries"
+    end
+
     get '/pipelines' do
         return NGS::Pipeline.all.to_json
     end
@@ -217,6 +230,9 @@ class NGS < Sinatra::Base
     get '/pipelines/:id/delete' do |id|
         pipe = NGS::Pipeline.find(id)
         if pipe
+            pipe.jobs.each do |job|
+                job.destroy
+            end
             pipe.destroy
             "Pipeline deleted!"
         else

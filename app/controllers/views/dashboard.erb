@@ -6,7 +6,14 @@
      <p> 
     <a href="/runs/register">Nach neuen Läufen suchen</a>
     </p>
-    <% color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin"} %>
+    
+    <!-- this bit of code at the bottom of the page would reveal the contents of the success message if it isn't nil -->
+    <% if @success_message %>
+      <div id="success" style="border: 2px solid green;">
+        <%= @success_message %>
+      </div>
+    <% end %>
+    
     <table>
     <tr>
       <th>Name</th>
@@ -16,11 +23,18 @@
     </tr>
     <% @runs.each do |run| %>
       <tr>
-        <td><%= run.name %></td>
+        <td><a href='<%= "dashboard/runs/#{run.id}" %>' ><%= run.name %></a></td>
         <td><a href='<%= "dashboard/runs/#{run.id}/libraries" %>'><%= run.libraries.length %></a></td>
         <% @pipelines.each do |pipeline| %>
           <% if run.pipelines.include?(pipeline) %>
-            <td bgcolor=<%= @color_by_status[run.jobs.find{|j| j.pipeline_id == pipeline.id}.status] %>><%= pipeline.name %></td>
+            <% job = run.jobs.find{|j| j.pipeline_id == pipeline.id} %>
+            <td bgcolor=<%= @color_by_status[job.status] %>>
+              <% if job.status == "completed" || job.status == "failed" %>
+                <a href="file://<%= job.run_dir %>" target="_blank" ><%= pipeline.name %></a>
+              <% else %>
+                <%= pipeline.name %></td>
+              <% end %>
+            </td>
           <% else %>
             <td><a href='<%= "runs/#{run.id}/create_job/#{pipeline.id}" %>'><%= pipeline.name %></a></td>
           <% end %>
@@ -28,7 +42,7 @@
         <td>
           <form onsubmit="return confirm('Soll dieser Lauf aus der Liste gelöscht werden?')" action="/runs/<%= run.id %>/delete" method="GET">
             <input type="hidden" name="_method" value="DELETE">
-            <button type="submit">Delete</button>
+            <button type="submit">Remove</button>
           </form>
         </td>
       </tr>

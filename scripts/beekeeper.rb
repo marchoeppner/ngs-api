@@ -90,7 +90,7 @@ def build_slurm_script(job)
 
     s = File.new("slurm.sh", "w+")
     sbatch_boilerplate.each {|l| s.puts l }
-    s.puts command
+    s.puts command + " -resume"
     s.close
 
     return "slurm.sh"
@@ -133,7 +133,7 @@ pipeline_profile = "lsh"
 
 jobs = rest_get("jobs")
 
-this_date = Time.now.strftime("%d-%m-%Y")
+this_date = Time.now #.strftime("%d-%m-%Y")
 
 jobs.each do |job|
 

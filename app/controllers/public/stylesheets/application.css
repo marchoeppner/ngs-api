@@ -24,6 +24,8 @@ header {
      
  }
  
+ h2 { color: rgb(197, 24, 111); }
+
  nav li {
     display: inline-block;
     margin-left: 70px;

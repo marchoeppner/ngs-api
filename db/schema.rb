@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_07_10_085144) do
+ActiveRecord::Schema.define(version: 2025_07_11_084113) do
 
   create_table "jobs", force: :cascade do |t|
     t.string "name"
@@ -37,6 +37,7 @@ ActiveRecord::Schema.define(version: 2025_07_10_085144) do
     t.string "R2"
     t.date "date_registered"
     t.integer "lane"
+    t.boolean "active", default: true
     t.index ["name", "lane", "run_id"], name: "uniq_library_by_lane_and_run", unique: true
   end
 

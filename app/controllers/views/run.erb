@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>Run Infos</title>
+  </head>
+  <body>   
+  <h2><%= @run.name %></h2>
+    </p>
+    <p>
+    Folder: <%= @run.folder %>
+    </p>
+    <table>
+      <tr>
+        <td>Libraries</td>
+        <td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>
+        <td>Deactivated: <%= @run.libraries.select {|l| !l.active }.length %> </td>
+      </tr>
+    </table>
+    </p>
+    <table>
+      <tr>
+        <th>Pipeline</th>
+        <th>Status</th>
+        <th>Link</th>
+      </tr>
+      <% @run.jobs.each do |job| %>
+        <tr>
+          <td><%= job.pipeline.name %></td>
+          <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
+          <td>
+          <% if job.status == "completed" || job.status == "failed" %>
+            <a href="file://<%= job.run_dir %>" target="_blank" >link</a>
+          <% end %>
+          </td>
+        </tr>
+      <% end %>
+  </body>
+</html>
