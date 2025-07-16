@@ -1,29 +1,23 @@
-<html>
-  <head>
-    <title>Run Infos</title>
-  </head>
-  <body>   
-    <h2>Test</h2>
-    </p>
-    <form action="/test/new" method="post">
+
+<h2>Test</h2>
+</p>
+<form action="/test/new" method="post">
       
-      <% @libraries.each do |lib| %>
-        <input type="checkbox" name="libs[]" value=<%= lib %>><%= lib %><br>
-      <% end %>
-      <input type="button" class="my_form-check-button" onClick="checkAll(true);" value="Check All" />
-      <input type="button" class="my_form-check-button" onClick="checkAll(false);" value="Clear All" />
-      <p>
-      <label for="pipeline">Choose a pipeline</label>
-      <select id="pipeline" name="pipeline">
-      <% @pipelines.each do |pipe| %>
-        <option value=<%= pipe %>><%= pipe %></option>
-      <% end %>
-      </select>
-      <p>
-      <button type="submit">Submit</button>
-    </form>
-  </body>
-</html>
+  <% @libraries.each do |lib| %>
+    <input type="checkbox" name="libs[]" value=<%= lib %>><%= lib %><br>
+  <% end %>
+  <input type="button" class="my_form-check-button" onClick="checkAll(true);" value="Check All" />
+  <input type="button" class="my_form-check-button" onClick="checkAll(false);" value="Clear All" />
+  <p>
+  <label for="pipeline">Choose a pipeline</label>
+  <select id="pipeline" name="pipeline">
+    <% @pipelines.each do |pipe| %>
+      <option value=<%= pipe.id %>><%= pipe.name %></option>
+    <% end %>
+  </select>
+  <p>
+  <button type="submit" class="button-2">Submit</button>
+</form>
 
 <script>
 function checkAll(checkEm) {

@@ -55,3 +55,25 @@ a:hover {
    color: rgb(197, 24, 111);
    text-decoration:underline;
 }
+
+.button-2 {
+  background-color: rgb(197, 24, 111);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+}
+
+input[type=button], input[type=submit] {
+  background-color: lightgray;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+}

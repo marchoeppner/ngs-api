@@ -1,45 +1,39 @@
-<html>
-  <head>
-    <title>List of all libraries</title>
-  </head>
-  <body>
-    <p>
-     <h2>Run <%= @run.name %></h2>
-    </p>
-    <table>
-    <tr>
-    <th>Library ID</th>
-    <th>Lane</th>
-    <th>R1</th>
-    <th>R2</th>
-    <th>Active</th>
-    <th></th>
-    </tr>
-    <% @libraries.each do |lib| %>
-    <% if lib.active %>
-      <tr bgcolor="lightgreen">
-    <% else %>
-      <tr bgcolor="lightgray">
-    <% end %>
-      <td><%= lib.name %></td>
-      <td><%= lib.lane %></td>
-      <td><%= lib.R1 %></td>
-      <td><%= lib.R2 %></td>
-      <td><%= lib.active %></td>
-      <td>
-      <% if lib.active %>
-        <form onsubmit="return confirm('Soll diese Library deaktiviert werden?')" action="/libraries/<%= lib.id %>/deactivate" method="GET">
-        <input type="hidden" name="_method" value="UPDATE">
-        <button type="submit">Deaktivieren</button>
-      </form>
-      <% else %>
-        <form onsubmit="return confirm('Soll diese Library wieder aktiviert werden?')" action="/libraries/<%= lib.id %>/activate" method="GET">
-          <input type="hidden" name="_method" value="UPDATE">
-          <button type="submit">Aktivieren</button>
-        </form>
-      <% end %>
-      </td>
-    <% end %>
-    </table>
-  </body>
-</html>
+
+<p>
+ <h2>Run <%= @run.name %></h2>
+</p>
+<table>
+<tr>
+<th>Library ID</th>
+<th>Lane</th>
+<th>R1</th>
+<th>R2</th>
+<th>Active</th>
+<th></th>
+</tr>
+<% @libraries.each do |lib| %>
+<% if lib.active %>
+  <tr bgcolor="lightgreen">
+<% else %>
+  <tr bgcolor="lightgray">
+<% end %>
+  <td><%= lib.name %></td>
+  <td><%= lib.lane %></td>
+  <td><%= lib.R1 %></td>
+  <td><%= lib.R2 %></td>
+  <td><%= lib.active %></td>
+  <td>
+  <% if lib.active %>
+<form onsubmit="return confirm('Soll diese Library deaktiviert werden?')" action="/libraries/<%= lib.id %>/deactivate" method="GET">
+<input type="hidden" name="_method" value="UPDATE">
+<button type="submit">Deaktivieren</button>
+  </form>
+  <% else %>
+<form onsubmit="return confirm('Soll diese Library wieder aktiviert werden?')" action="/libraries/<%= lib.id %>/activate" method="GET">
+  <input type="hidden" name="_method" value="UPDATE">
+  <button type="submit">Aktivieren</button>
+</form>
+  <% end %>
+  </td>
+<% end %>
+</table>

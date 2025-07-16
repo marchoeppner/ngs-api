@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_07_11_084113) do
+ActiveRecord::Schema.define(version: 2025_07_16_063940) do
 
   create_table "jobs", force: :cascade do |t|
     t.string "name"
@@ -47,6 +47,7 @@ ActiveRecord::Schema.define(version: 2025_07_11_084113) do
     t.string "version"
     t.string "template"
     t.string "samplesheet_format"
+    t.boolean "runlevel", default: false
     t.index ["name"], name: "uniq_pipeline", unique: true
   end
 

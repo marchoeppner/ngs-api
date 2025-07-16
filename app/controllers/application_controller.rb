@@ -42,7 +42,7 @@ class NGS < Sinatra::Base
     get '/dashboard' do
         @color_by_status = color_by_status
         @runs = NGS::Run.all.reverse
-        @pipelines = NGS::Pipeline.all
+        @pipelines = NGS::Pipeline.where(runlevel: true)
         @success_message = session[:success_message]
         session[:success_message] = nil
         erb :dashboard
@@ -50,7 +50,7 @@ class NGS < Sinatra::Base
 
     get '/dashboard/test' do
         @libraries = [ "lib1", "lib2", "lib3"]
-        @pipelines = [ "pipe1", "pipe2", "pipe3"]
+        @pipelines = NGS::Pipeline.where(runlevel: false)
         erb :test
     end
 
