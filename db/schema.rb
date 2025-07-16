@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_07_16_063940) do
+ActiveRecord::Schema.define(version: 2025_07_16_065435) do
 
   create_table "jobs", force: :cascade do |t|
     t.string "name"
@@ -57,6 +57,13 @@ ActiveRecord::Schema.define(version: 2025_07_16_063940) do
     t.string "description"
     t.string "folder"
     t.date "date_registered"
+  end
+
+  create_table "xref_libraries_jobs", force: :cascade do |t|
+    t.string "library_id"
+    t.string "job_id"
+    t.date "created_at"
+    t.index ["library_id", "job_id"], name: "uniq_lib_job", unique: true
   end
 
 end
