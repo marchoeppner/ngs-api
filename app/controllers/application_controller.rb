@@ -48,6 +48,16 @@ class NGS < Sinatra::Base
         erb :dashboard
     end
 
+    get '/dashboard/test' do
+        @libraries = [ "lib1", "lib2", "lib3"]
+        @pipelines = [ "pipe1", "pipe2", "pipe3"]
+        erb :test
+    end
+
+    post '/test/new' do
+        return params.inspect
+    end
+
     get '/dashboard/jobs' do
         @color_by_status = color_by_status
         @jobs = NGS::Job.all.reverse
