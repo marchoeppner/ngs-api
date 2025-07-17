@@ -13,7 +13,7 @@
 </tr>
 <% @jobs.each do |job| %>
 <tr>
-  <td><%= job.run.name %></td>
+  <td><a href='<%= "/dashboard/jobs/#{job.id}" %>' ><%= job.run.name %></a></td>
   <td><%= job.pipeline.name %></td>
   <td bgcolor=<%= @color_by_status[job.status] %>><%= job.status %></td>
   <td><%= job.date_updated %></td>
@@ -23,7 +23,7 @@
 <td></td>
   <% end %>
   <td>
-  <form onsubmit="return confirm('Sollen dieser Job und alle Ergebnisse gelöscht werden?')" action="/jobs/<%= job.id %>/delete" method="GET">
+  <form onsubmit="return confirm('Really remove this job and all results?')" action="/jobs/<%= job.id %>/delete" method="GET">
 <input type="hidden" name="_method" value="DELETE">
 <button type="submit">Delete</button>
   </form>

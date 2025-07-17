@@ -1,0 +1,41 @@
+
+<h2>Job <%= @job.id %></h2>
+</p>
+<table>
+<tr>
+  <td>Run</td><td><%= @job.run.name %></td>
+</tr>
+<tr>
+  <td>Pipeline</td><td> <%= @job.pipeline.name %></td>
+</tr>
+<tr>
+  <td>Folder</td><td><%= @job.run.folder %></td>
+</tr>
+<tr>
+  <td>Status</td><td><%= @job.status %></td>
+</tr>
+</table>
+
+<% libs = @job.libraries %>
+<% if !libs.empty? %>
+  <h3>Libraries included</h3>
+
+  <table>
+    <tr>
+      <th>Library ID</th>
+      <th>Lane</th>
+      <th>R1</th>
+      <th>R2</th>
+    </tr>
+    <% libs.each do |lib| %>
+      <tr>
+        <td><%= lib.name %></td>
+        <td><%= lib.lane %></td>
+        <td><%= lib.R1 %></td>
+        <td><%= lib.R2 %></td>  
+      </tr>
+    <% end %>
+  </table>
+<% end %>
+  
+

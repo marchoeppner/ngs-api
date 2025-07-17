@@ -8,9 +8,6 @@
 <tr>
   <td>Libraries</td><td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>
 </tr>
-<tr>
-  <td>Deactivated</td><td><%= @run.libraries.select {|l| !l.active }.length %></td>
-</tr>
 </table>
 
 <p></p>
@@ -26,7 +23,7 @@
   </tr>
   <% @run.jobs.each do |job| %>
     <tr>
-    <td><%= job.pipeline.name %></td>
+    <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
     <td><%= job.pipeline.description %></td>
     <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
     <td><%= job.date_updated %></td>

@@ -53,6 +53,11 @@ class NGS < Sinatra::Base
         @jobs = NGS::Job.all.reverse
         erb :jobs
     end
+    get '/dashboard/jobs/:id' do |id|
+        @color_by_status = color_by_status
+        @job = NGS::Job.find(id)
+        erb :job
+    end
 
     get '/dashboard/runs/:id/libraries' do |id|
         @run = NGS::Run.find(id)
@@ -346,6 +351,13 @@ class NGS < Sinatra::Base
             "Job with id #{id} not found."
         end
     end
+    
+    get '/jobs/:id/libraries' do |id|
+        @job = NGS::Job.find(id)
+        @run = @job.run
+        @libraries = @job.libraries
+        erb :job
+    end
 
     post '/jobs/:id/update' do |id|
         job = NGS::Job.find(id)
@@ -369,6 +381,11 @@ class NGS < Sinatra::Base
     get '/jobs/:id/delete' do |id|
         job = NGS::Job.find(id)
         if job
+            if job.slurm_id
+                if [ "running", "pending", "created", "submitted"].include?(job.status)
+                    status = `scancel #{job.slurm_id}`
+                end
+            end
             FileUtils.rm_rf(job.run_dir)
             job.destroy
             "Job deleted"
