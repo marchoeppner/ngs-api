@@ -123,8 +123,9 @@ def find_report(job)
 
     report = nil
 
-    if File.directory("#{job['run_dir']}/results/reports")
+    if File.directory?("#{job['run_dir']}/results/reports")
         htmls = Dir["#{run_dir}/results/reports/*.html"]
+        warn htmls.inspect
         if htmls.length > 1
             report = htmls.find{|h| !h.include?("multiqc") && !h.include?("illumina") && !h.include?("nanopore")}
         elsif htmls.length == 1

@@ -42,7 +42,7 @@ class NGS < Sinatra::Base
     get '/dashboard' do
         @color_by_status = color_by_status
         @runs = NGS::Run.all.reverse
-        @pipelines = NGS::Pipeline.all
+        @pipelines = NGS::Pipeline.where(runlevel: true)
         @success_message = session[:success_message]
         session[:success_message] = nil
         erb :dashboard
@@ -57,6 +57,7 @@ class NGS < Sinatra::Base
     get '/dashboard/runs/:id/libraries' do |id|
         @run = NGS::Run.find(id)
         @libraries = @run.libraries
+        @pipelines = NGS::Pipeline.where(runlevel: false)
         erb :libraries
     end
 
@@ -114,6 +115,8 @@ class NGS < Sinatra::Base
 
     get '/runs/:id/libraries' do |id|
         NGS::Library.where(run_id: id).to_json
+        @success_message = session[:success_message]
+        session[:success_message] = nil
     end
     
     # scans a registered run to see if libraries need to be added
@@ -138,6 +141,10 @@ class NGS < Sinatra::Base
             { "error" => "Pipeline with id #{params['pipeline_id']} not found" }
         end
 
+        if !pipeline.runlevel
+            { "error" => "This function may only be used with run level pipelines"}
+        end
+
         if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?
             "This job already exists"  
         end
@@ -154,26 +161,7 @@ class NGS < Sinatra::Base
         wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{pipeline.name}/#{this_date}"
         FileUtils.mkdir_p(wpath)
 
-        if pipeline.samplesheet_format
-            # Make the samplesheet
-            rows = [ pipeline.samplesheet_format ]
-            run.libraries.each do |lib|
-                # ReadQC should process all libraries; else mask certain types 
-                next if ( is_skippable(lib.name)  and !pipeline.name.include?("read-qc") ) or !lib.active
-                if pipeline.samplesheet_format.include?("platform")
-                    rows << [ lib.name, lib.platform.upcase, lib.R1, lib.R2 ].join("\t")
-                else
-                    rows << [ lib.name, lib.R1, lib.R2 ].join("\t")
-                end
-            end
-            ss_name = "#{wpath}/samples.tsv"
-            ss = File.new(ss_name, "w+")
-            rows.each { |r| ss.puts r }
-            ss.close
-            command = "#{command} --input samples.tsv"
-        else # the folder itself is the input
-            command = "#{command} --input #{run.folder}"
-        end
+        command = "#{command} --input #{run.folder}"
 
         payload = { 
             "name" => "#{run.name}_#{pipeline.name}_#{this_date}", 
@@ -188,7 +176,91 @@ class NGS < Sinatra::Base
         job = NGS::Job.create(payload)
         job.save
 
+        if job
+            session[:success_message] = "Neuen Job angelegt."
+        else
+            session[:success_message] = "Kein neuer Job angelegt."
+        end
+
         redirect '/dashboard'
+
+    end
+
+    post '/runs/:id/create_bulk' do |id|
+
+        run = NGS::Run.find(id)
+        if !run
+            return { "error" => "Run does not exist!"}
+        end
+
+        pipeline = NGS::Pipeline.find(params["pipeline"])
+        if !pipeline
+            return { "error" => "Pipeline not found"}
+        end
+
+        if pipeline.runlevel
+            return { "error" => "This function may not be used with run-level pipelines"}
+        end
+
+        if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?
+            "This job already exists"  
+        end
+
+        libraries = params["libs"].map {|lid| NGS::Library.find(lid) }
+        if libraries.empty?
+            return { "error" => "No libraries found"}
+        end  
+
+        # Construct pipeline call
+        command = "#{pipeline['template']} -profile #{settings.pipeline_profile} -r #{pipeline.version} --run_name #{run.name} -resume"
+
+        this_date = Time.now.strftime("%d-%m-%Y")
+
+        # Create the run directory
+        wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{pipeline.name}/#{this_date}"
+        FileUtils.mkdir_p(wpath)
+
+        # Make the sample sheet
+        rows = [ pipeline.samplesheet_format ]
+        libraries.each do |lib|
+            if pipeline.samplesheet_format.include?("platform")
+                rows << [ lib.name, run.platform.upcase, lib.R1, lib.R2 ].join("\t")
+            else
+                rows << [ lib.name, lib.R1, lib.R2 ].join("\t")
+            end
+        end
+        ss_name = "#{wpath}/samples.tsv"
+        ss = File.new(ss_name, "w+")
+        rows.each { |r| ss.puts r }
+        ss.close
+
+        command = "#{command} --input samples.tsv"
+
+        payload = { 
+            "name" => "#{run.name}_#{pipeline.name}_#{this_date}", 
+            "command" => command, 
+            "run_dir" => wpath,
+            "status" => "created",
+            "date_registered" => this_date,
+            "run_id" => run.id, 
+            "pipeline_id" => pipeline.id 
+        }
+    
+        job = NGS::Job.create(payload)
+        job.save
+
+        # link libraries to the job
+        libraries.each do |lib|
+            xref = NGS::XrefLibrariesJob.create({library_id: lib.id, job_id: job.id})
+        end
+
+        if job
+            session[:success_message] = "Neuen Job angelegt."
+        else
+            session[:success_message] = "Kein neuer Job angelegt."
+        end
+
+        redirect "/dashboard/runs/#{id}/libraries"
 
     end
 

@@ -17,6 +17,12 @@
     </div>
     </header>
 
+    <% if @success_message %>
+        <div id="success" style="border: 2px solid green;">
+            <%= @success_message %>
+        </div>
+    <% end %>
+
     <%= yield %>
 
 </body>
