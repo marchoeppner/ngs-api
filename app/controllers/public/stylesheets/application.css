@@ -26,6 +26,9 @@ header {
  
  h2 { color: rgb(197, 24, 111); }
 
+ h3 { font-size: 16px; color: rgb(197, 24, 111); }
+
+
  nav li {
     display: inline-block;
     margin-left: 70px;
@@ -33,9 +36,9 @@ header {
     bottom: 0;
  }
 
-table { border-collapse: collapse;}
-tr td { border-bottom: 1px solid grey; padding-top: 5px; padding-bottom: 5px; padding-left: 10px; padding-right: 10px; }
-tr th { border-bottom: 5px solid black ; padding-top: 5px; padding-bottom: 5px; padding-left: 5px;  }
+table { border-collapse: collapse; font-size: 16px;}
+tr td { font-size: 14px; border-bottom: 1px solid grey; padding-top: 5px; padding-bottom: 5px; padding-left: 10px; padding-right: 10px; }
+tr th { font-size: 14px; border-bottom: 5px solid black ; padding-top: 5px; padding-bottom: 5px; padding-left: 5px;  }
 
 .container { 
    padding: 0px; 

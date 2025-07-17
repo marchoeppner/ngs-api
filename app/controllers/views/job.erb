@@ -12,8 +12,13 @@
   <td>Folder</td><td><%= @job.run.folder %></td>
 </tr>
 <tr>
-  <td>Status</td><td><%= @job.status %></td>
+  <td>Status</td><td bgcolor=<%= @color_by_status[@job.status] %>><%= @job.status %></td>
 </tr>
+<% if @job.report %>
+  <tr>
+    <td>Report</td><td><a href='<%= "file://#{@job.report}"%>' target="_blank">open</td>
+  </tr>
+<% end %>
 </table>
 
 <% libs = @job.libraries %>
