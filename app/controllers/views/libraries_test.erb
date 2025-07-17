@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>List of all libraries</title>
+  </head>
+  <body>
+    <p>
+     <h2>Run <%= @run.name %></h2>
+    </p>
+    <form action="/dashboard/test" method="post" name="checkbox_form">
+    <% @run.libraries.each do |lib| %>
+      <input type="checkbox" name="item[]" value=<%= lib.id %>><%= lib.name %><br/>
+    <% end %>
+    </form>
+
+    <form onsubmit="return confirm('Sollen diese Libraries analysiert werden')" action="/test/<%= @run.id %>/bla" method="GET">
+      <input type="hidden" name="_method" value="UPDATE">
+      <button type="submit">Analysieren</button>
+    </form>
+  </body>
+</html>

@@ -66,6 +66,16 @@ class NGS < Sinatra::Base
         erb :run
     end
 
+    get '/dashboard/test/:id' do |id|
+        @color_by_status = color_by_status
+        @run = NGS::Run.find(id)
+        erb :libraries_test
+    end
+
+    get '/test/:id/bla' do |id|
+        params["item"].inspect
+    end
+
     get '/runs' do 
         NGS::Run.all.to_json
     end
@@ -151,7 +161,7 @@ class NGS < Sinatra::Base
                 # ReadQC should process all libraries; else mask certain types 
                 next if ( is_skippable(lib.name)  and !pipeline.name.include?("read-qc") ) or !lib.active
                 if pipeline.samplesheet_format.include?("platform")
-                    rows << [ lib.name, "ILLUMINA", lib.R1, lib.R2 ].join("\t")
+                    rows << [ lib.name, lib.platform.upcase, lib.R1, lib.R2 ].join("\t")
                 else
                     rows << [ lib.name, lib.R1, lib.R2 ].join("\t")
                 end
