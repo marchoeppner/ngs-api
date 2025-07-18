@@ -3,7 +3,7 @@
 </p>
 <table>
 <tr>
-  <td>Run</td><td><%= @job.run.name %></td>
+  <td>Run</td><td><a href='<%= "/dashboard/runs/#{@job.run_id}" %>' ><%= @job.run.name %></a></td>
 </tr>
 <tr>
   <td>Pipeline</td><td> <%= @job.pipeline.name %> (<%= @job.pipeline.description %>)</td>
