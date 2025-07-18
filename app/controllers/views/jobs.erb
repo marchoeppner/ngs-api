@@ -1,6 +1,6 @@
 
 <p>
-  Processing jobs
+  <h2>Processing jobs</h2>
 </p>
 <table>
 <tr>
@@ -25,7 +25,7 @@
   <td>
   <form onsubmit="return confirm('Really remove this job and all results?')" action="/jobs/<%= job.id %>/delete" method="GET">
 <input type="hidden" name="_method" value="DELETE">
-<button type="submit">Delete</button>
+<button type="submit" class="button-delete">Delete</button>
   </form>
   </td>
 </tr>

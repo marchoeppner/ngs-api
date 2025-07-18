@@ -4,6 +4,18 @@ class NGS::Run < ActiveRecord::Base
     has_many :jobs, dependent: :destroy
     has_many :pipelines, through: :jobs
 
+    def runlevel_jobs
+
+        return self.jobs.select {|j| j.pipeline.runlevel }
+
+    end
+
+    def library_jobs
+
+        return self.jobs.select {|j| !j.pipeline.runlevel }
+
+    end
+
     def register_libraries
 
         data = Dir["#{self.folder}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_L00[0-9]_R[1,2]/)[0]}

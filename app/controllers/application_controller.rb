@@ -63,6 +63,9 @@ class NGS < Sinatra::Base
         @run = NGS::Run.find(id)
         @libraries = @run.libraries
         @pipelines = NGS::Pipeline.where(runlevel: false)
+        @success_message = session[:success_message]
+        session[:success_message] = nil
+
         erb :libraries
     end
 
@@ -101,9 +104,9 @@ class NGS < Sinatra::Base
             end
         end
         if answer.empty?
-            session[:success_message] = "Keine neuen Läufe gefunden."
+            session[:success_message] = "No new runs found."
         else
-            session[:success_message] = "Erfolgreich #{answer.length} Läufe hinzugefügt."
+            session[:success_message] = "Successfully added #{answer.length} runs."
         end
         redirect '/dashboard'
     end
@@ -182,9 +185,9 @@ class NGS < Sinatra::Base
         job.save
 
         if job
-            session[:success_message] = "Neuen Job angelegt."
+            session[:success_message] = "New job created."
         else
-            session[:success_message] = "Kein neuer Job angelegt."
+            session[:success_message] = "No new job created."
         end
 
         redirect '/dashboard'
@@ -208,7 +211,7 @@ class NGS < Sinatra::Base
         end
 
         if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?
-            "This job already exists"  
+            return "This job already exists"  
         end
 
         libraries = params["libs"].map {|lid| NGS::Library.find(lid) }
@@ -260,9 +263,9 @@ class NGS < Sinatra::Base
         end
 
         if job
-            session[:success_message] = "Neuen Job angelegt."
+            session[:success_message] = "New job created."
         else
-            session[:success_message] = "Kein neuer Job angelegt."
+            session[:success_message] = "No new job created."
         end
 
         redirect "/dashboard/runs/#{id}/libraries"
@@ -323,7 +326,7 @@ class NGS < Sinatra::Base
         pipe = NGS::Pipeline.find(id)
         if pipe
             pipe.jobs.each do |job|
-                job.destroy
+                job.remove
             end
             pipe.destroy
             "Pipeline deleted!"
@@ -381,16 +384,10 @@ class NGS < Sinatra::Base
     get '/jobs/:id/delete' do |id|
         job = NGS::Job.find(id)
         if job
-            if job.slurm_id
-                if [ "running", "pending", "created", "submitted"].include?(job.status)
-                    status = `scancel #{job.slurm_id}`
-                end
-            end
-            FileUtils.rm_rf(job.run_dir)
-            job.destroy
-            "Job deleted"
+            job.remove
+            return "Job deleted"
         else
-            "Job with id #{id} not found."
+            return "Job with id #{id} not found."
         end
     end
 

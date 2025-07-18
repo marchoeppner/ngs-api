@@ -36,9 +36,11 @@ header {
     bottom: 0;
  }
 
-table { border-collapse: collapse; font-size: 16px;}
-tr td { font-size: 14px; border-bottom: 1px solid grey; padding-top: 5px; padding-bottom: 5px; padding-left: 10px; padding-right: 10px; }
-tr th { font-size: 14px; border-bottom: 5px solid black ; padding-top: 5px; padding-bottom: 5px; padding-left: 5px;  }
+table { border-collapse: collapse; font-size: 20px;}
+tr td { font-size: 16px; border-bottom: 1px solid grey; padding-top: 5px; padding-bottom: 5px; padding-left: 10px; padding-right: 10px; }
+tr th { font-size: 16px; border-bottom: 5px solid black ; padding-top: 5px; padding-bottom: 5px; padding-left: 5px;  }
+
+th.runlevel { font-size: 18px; color: grey; border-bottom: 2px solid black ; border-top: 2px solid black ; padding-top: 5px; padding-bottom: 5px; padding-left: 5px;  }
 
 .container { 
    padding: 0px; 
@@ -70,6 +72,28 @@ a:hover {
   display: inline-block;
   font-size: 12px;
 }
+
+.button-2:hover {
+   background-color: rgb(91, 136, 89);
+   color: white;
+ }
+
+.button-delete {
+   background-color: gray;
+   border: none;
+   color: white;
+   border-radius: 8px;
+   padding: 5px 5px;
+   text-align: center;
+   text-decoration: none;
+   display: inline-block;
+   font-size: 12px;
+ }
+
+ .button-delete:hover {
+   background-color: rgb(180, 83, 83);
+   color: white;
+ }
 
 input[type=button], input[type=submit] {
   background-color: lightgray;

@@ -176,6 +176,9 @@ jobs.each do |job|
         warn "Active job #{job['slurm_id']}, updating status..."
         status = get_status(job["slurm_id"])
         payload = { "status" => status, "date_updated" => this_date}
+        if !job["log"]
+            payload["log"] = "#{job['run_dir']}/slurm.err"
+        end
         rest_post("jobs/#{job['id']}/update", payload)
     # job failed, check if it can be re-submitted 
     elsif job["status"] == "failed"
@@ -204,6 +207,7 @@ jobs.each do |job|
                 rest_post("jobs/#{job['id']}/update", payload)
             end
         end
+        
     end
 end
 

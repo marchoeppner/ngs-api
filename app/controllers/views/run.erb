@@ -21,23 +21,52 @@
     <th>Results</th>
     <th>Report</th>
   </tr>
-  <% @run.jobs.each do |job| %>
+  <% run_jobs = @run.runlevel_jobs %>
+  <% lib_jobs = @run.library_jobs %>
+  <% if run_jobs %>
     <tr>
-    <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
-    <td><%= job.pipeline.description %></td>
-    <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
-    <td><%= job.date_updated %></td>
-    <td>
-    <% if job.status == "completed" || job.status == "failed" %>
-      <a href="file://<%= job.run_dir %>" target="_blank" >link</a>
+      <th class="runlevel" colspan=6>Run-level jobs</th>
+    </tr> 
+    <% run_jobs.each do |job| %>
+      <tr>
+        <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
+        <td><%= job.pipeline.description %></td>
+        <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
+        <td><%= job.date_updated %></td>
+        <td>
+        <% if job.status == "completed" || job.status == "failed" %>
+          <a href="file://<%= job.run_dir %>" target="_blank" >link</a>
+        <% end %>
+        </td>
+        <% if job.report %>
+          <td><a href='<%= "file://#{job.report}"%>' target="_blank">open</td>
+        <% else %>
+          <td></td>
+        <% end %>
+      </tr>
     <% end %>
-    </td>
-    <% if job.report %>
-      <td><a href='<%= "file://#{job.report}"%>' target="_blank">open</td>
-    <% else %>
-      <td></td>
-    <% end %>
+  <% end %>
+  <% if lib_jobs %>
+    <tr>
+      <th class="runlevel" colspan=6>Library-level jobs</th>
     </tr>
+    <% lib_jobs.each do |job| %>
+      <tr>
+        <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
+        <td><%= job.pipeline.description %></td>
+        <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
+        <td><%= job.date_updated %></td>
+        <td>
+        <% if job.status == "completed" || job.status == "failed" %>
+          <a href="file://<%= job.run_dir %>" target="_blank" >link</a>
+        <% end %>
+        </td>
+        <% if job.report %>
+          <td><a href='<%= "file://#{job.report}"%>' target="_blank">open</td>
+        <% else %>
+          <td></td>
+        <% end %>
+      </tr>
+    <% end %>
   <% end %>
 </table>
-

@@ -6,17 +6,31 @@
   <td>Run</td><td><%= @job.run.name %></td>
 </tr>
 <tr>
-  <td>Pipeline</td><td> <%= @job.pipeline.name %></td>
+  <td>Pipeline</td><td> <%= @job.pipeline.name %> (<%= @job.pipeline.description %>)</td>
 </tr>
 <tr>
-  <td>Folder</td><td><%= @job.run.folder %></td>
+  <td>Folder</td><td><%= @job.run_dir %></td>
+</tr>
+<tr>
+  <td>Command</td><td><%= @job.command %></td>
 </tr>
 <tr>
   <td>Status</td><td bgcolor=<%= @color_by_status[@job.status] %>><%= @job.status %></td>
 </tr>
+<tr>
+  <td>Log</td><td><a href='<%= "file://#{@job.log}"%>' target="_blank">open</td>
 <% if @job.report %>
   <tr>
     <td>Report</td><td><a href='<%= "file://#{@job.report}"%>' target="_blank">open</td>
+  </tr>
+  <tr>
+    <td>
+      <form onsubmit="return confirm('Really remove this job and all results?')" action="/jobs/<%= @job.id %>/delete" method="GET">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit" class="button-delete">Delete</button>
+      </form>
+    </td>
+    <td></td>  
   </tr>
 <% end %>
 </table>
@@ -31,13 +45,15 @@
       <th>Lane</th>
       <th>R1</th>
       <th>R2</th>
+      <th></th>
     </tr>
     <% libs.each do |lib| %>
       <tr>
         <td><%= lib.name %></td>
         <td><%= lib.lane %></td>
         <td><%= lib.R1 %></td>
-        <td><%= lib.R2 %></td>  
+        <td><%= lib.R2 %></td>
+        
       </tr>
     <% end %>
   </table>
