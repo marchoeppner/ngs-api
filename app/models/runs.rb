@@ -16,6 +16,18 @@ class NGS::Run < ActiveRecord::Base
 
     end
 
+    def update_description
+        if File.exist?("#{self.folder}/SampleSheet.csv")
+            lines = IO.readlines("#{self.folder}/SampleSheet.csv")
+            line = lines.find {|l| l.match(/^Experiment\sName.*/)}
+            if line
+                name = line.split(",")[-1].strip
+                self.update({ "description" => name })
+                self.save
+            end
+        end
+    end
+
     def register_libraries
 
         data = Dir["#{self.folder}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_L00[0-9]_R[1,2]/)[0]}

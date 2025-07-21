@@ -100,7 +100,8 @@ class NGS < Sinatra::Base
                 run = NGS::Run.create({ "folder" => dir, "platform" => "Illumina", "date_registered" => Time.now, "name" => name })
                 run.save
                 answer << run
-                run.register_libraries    
+                run.register_libraries
+                run.update_description
             end
         end
         if answer.empty?
@@ -140,17 +141,17 @@ class NGS < Sinatra::Base
         run = NGS::Run.find(params["id"])
 
         if !run
-            { "error" => "Run with id #{params['id']} not found"}
+            return { "error" => "Run with id #{params['id']} not found"}
         end
 
         pipeline = NGS::Pipeline.find(params["pipeline_id"])
 
         if !pipeline
-            { "error" => "Pipeline with id #{params['pipeline_id']} not found" }
+            return { "error" => "Pipeline with id #{params['pipeline_id']} not found" }
         end
 
         if !pipeline.runlevel
-            { "error" => "This function may only be used with run level pipelines"}
+            return { "error" => "This function may only be used with run level pipelines"}
         end
 
         if !NGS::Job.where(run_id: run.id, pipeline_id: pipeline.id).empty?

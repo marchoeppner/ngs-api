@@ -3,7 +3,10 @@
 </p>
 <table>
 <tr>
-  <td>Folder</td><td><%= @run.folder %></td>
+  <td>Description</td><td><%= @run.description %></td>
+</tr>
+<tr>
+  <td>Folder</td><td><a href='<%= "file://#{@run.folder}"%>' target="_blank"><%= @run.folder %></td>
 </tr>
 <tr>
   <td>Libraries</td><td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>

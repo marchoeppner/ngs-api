@@ -9,7 +9,7 @@
   <td>Pipeline</td><td> <%= @job.pipeline.name %> (<%= @job.pipeline.description %>)</td>
 </tr>
 <tr>
-  <td>Folder</td><td><%= @job.run_dir %></td>
+  <td>Folder</td><td><a href='<%= "file://#{@job.run_dir}"%>' target="_blank"><%= @job.run_dir %></td>
 </tr>
 <tr>
   <td>Command</td><td><%= @job.command %></td>

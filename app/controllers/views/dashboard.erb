@@ -6,6 +6,7 @@
 <table>
 <tr>
   <th>Name</th>
+  <th>Description</th>
   <th># Libraries</th>
   <th>Analyses</th>
   <th colspan=<%= @pipelines.length %>>Run processing</th>
@@ -13,6 +14,7 @@
 <% @runs.each do |run| %>
   <tr>
     <td><a href='<%= "dashboard/runs/#{run.id}" %>' ><%= run.name %></a></td>
+    <td><a href='<%= "dashboard/runs/#{run.id}" %>' ><%= run.description %></a></td>
     <td><a href='<%= "dashboard/runs/#{run.id}/libraries" %>'><%= run.libraries.length %></a></td>
     <td><a href='<%= "dashboard/runs/#{run.id}" %>' ><%= run.jobs.select{|j| !j.pipeline.runlevel }.length %></a></td>
     <% @pipelines.each do |pipeline| %>
