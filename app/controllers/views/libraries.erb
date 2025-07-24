@@ -1,6 +1,6 @@
 
 <p>
- <h2>Run <%= @run.name %></h2>
+ <h2><a href="/dashboard/runs/<%= @run.id %>">Run <%= @run.name %></a></h2>
 </p>
 
 <form action="/runs/<%= @run.id %>/create_bulk" method="post">

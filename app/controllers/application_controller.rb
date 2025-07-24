@@ -27,6 +27,8 @@ class NGS < Sinatra::Base
         set :illumina_run_dir, '/work_syn/ngs/runs/miseq'
         set :pipeline_run_dir, '/work_syn/ngs/analyses'
         set :pipeline_profile, 'lsh'
+        set :host_authorization, { permitted_hosts: [ "ngs.dashboard", "localhost"] }
+
     end
     
     not_found do
@@ -62,7 +64,7 @@ class NGS < Sinatra::Base
     get '/dashboard/runs/:id/libraries' do |id|
         @run = NGS::Run.find(id)
         @libraries = @run.libraries
-        @pipelines = NGS::Pipeline.where(runlevel: false)
+        @pipelines = NGS::Pipeline.where(runlevel: false, joblevel:false)
         @success_message = session[:success_message]
         session[:success_message] = nil
 
@@ -380,6 +382,50 @@ class NGS < Sinatra::Base
         else
             { "error" => "Job does not exist." }
         end
+    end
+
+    get '/jobs/:id/archive' do  |id|
+        job = NGS::Job.find(id)
+        if !job
+            return { "error" => "Job not found"}
+        end
+
+        pipeline = NGS::Pipeline.find_by_name("archive_job")
+        if !pipeline
+            return { "error" => "Pipeline not found" }
+        end
+
+        if !NGS::Job.where(pipeline_id: pipeline.id, job_id: job.id)
+            return { "error" => "Job already exists "}
+        end
+
+        command = "#{pipeline.template} --input #{job.run_dir}\nrm -Rf #{job.run_dir}"
+
+        # Create the run directory
+        wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{pipeline.name}/#{this_date}"
+        FileUtils.mkdir_p(wpath)
+
+        payload = { 
+            "name" => "#{job.id}_#{pipeline.name}_#{this_date}", 
+            "command" => command, 
+            "run_dir" => wpath,
+            "status" => "created",
+            "date_registered" => this_date,
+            "run_id" => job.run.id, 
+            "pipeline_id" => pipeline.id 
+        }
+    
+        ajob = NGS::Job.create(payload)
+        ajob.save
+
+        if ajob
+            session[:success_message] = "New job created."
+        else
+            session[:success_message] = "No new job created."
+        end
+
+        redirect '/dashboard/jobs'
+
     end
 
     get '/jobs/:id/delete' do |id|

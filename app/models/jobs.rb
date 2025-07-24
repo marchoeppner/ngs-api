@@ -7,11 +7,11 @@ class NGS::Job < ActiveRecord::Base
     def remove
         if self.slurm_id
             if ["running", "pending", "submitted", "created"].include?(self.status)
-                `scancel #{self.slurm_id}`
+                system("scancel #{self.slurm_id}")
             end
         end
         if File.directory?(self.run_dir)
-            system("rm -Rf #{wd}")
+            system("rm -Rf #{self.run_dir}")
         end
         self.destroy
     end
