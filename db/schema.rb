@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_07_21_095403) do
+ActiveRecord::Schema.define(version: 2025_07_25_085224) do
 
   create_table "jobs", force: :cascade do |t|
     t.string "name"
@@ -28,6 +28,8 @@ ActiveRecord::Schema.define(version: 2025_07_21_095403) do
     t.integer "run_id"
     t.integer "pipeline_id"
     t.string "report"
+    t.boolean "is_archived", default: false
+    t.boolean "complete", default: false
   end
 
   create_table "libraries", force: :cascade do |t|

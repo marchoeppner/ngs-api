@@ -2,7 +2,7 @@
 <h2>Job <%= @job.id %></h2>
 </p>
 <table>
-<tr>
+
   <td>Run</td><td><a href='<%= "/dashboard/runs/#{@job.run_id}" %>' ><%= @job.run.name %></a></td>
 </tr>
 <tr>
@@ -17,6 +17,22 @@
 <tr>
   <td>Status</td><td bgcolor=<%= @color_by_status[@job.status] %>><%= @job.status %></td>
 </tr>
+  <% if @parent %>
+    <td>Parent Job</td><td><a href='<%= "/dashboard/jobs/#{@parent.id}" %>' ><%= @parent.id %> (<%= @parent.pipeline.name %>)</a></td>
+  <% end %>
+</tr>
+<tr>  
+  <td>Archived?</td>
+  <% if @job.is_archived %>
+    <% if @child %>
+      <td><a href='<%= "/dashboard/jobs/#{@child.id}" %>' ><%= @child.id %> (<%= @child.pipeline.name %>)</a></td>
+    <% else %>
+      <td><%= @job.is_archived %></td>
+    <% end %>
+  <% else %>
+    <td><%= @job.is_archived %></td>
+  <% end %>
+</tr>
 <tr>
   <td>Log</td><td><a href='<%= "file://#{@job.log}"%>' target="_blank">open</td>
 <% if @job.report %>
@@ -30,7 +46,16 @@
         <button type="submit" class="button-delete">Delete</button>
       </form>
     </td>
-    <td></td>  
+    <% if @job.depends_on or @job.pipeline.runlevel or @job.is_archived %>
+      <td></td>
+    <% else %>
+      <td><form onsubmit="return confirm('Really archive this job?')" action="/jobs/<%= @job.id %>/archive" method="GET">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="button-delete">Archive</button>
+        </form>
+      </td>
+    <% end %>
+    </tr>
   </tr>
 <% end %>
 </table>

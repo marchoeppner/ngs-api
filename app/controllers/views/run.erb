@@ -17,6 +17,7 @@
 
 <table>
   <tr>
+    <th></th>
     <th>Pipeline</th>
     <th>Description</th>
     <th>Status</th>
@@ -28,10 +29,11 @@
   <% lib_jobs = @run.library_jobs %>
   <% if run_jobs %>
     <tr>
-      <th class="runlevel" colspan=6>Run-level jobs</th>
+      <th class="runlevel" colspan=7>Run-level jobs</th>
     </tr> 
     <% run_jobs.each do |job| %>
       <tr>
+        <td></td>
         <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
         <td><%= job.pipeline.description %></td>
         <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>
@@ -51,10 +53,16 @@
   <% end %>
   <% if lib_jobs %>
     <tr>
-      <th class="runlevel" colspan=6>Library-level jobs</th>
+      <th class="runlevel" colspan=7>Library-level jobs</th>
     </tr>
     <% lib_jobs.each do |job| %>
       <tr>
+        <tr>
+        <% if job.is_archived %>
+          <td><i class="fa fa-archive" aria-hidden="true"></i></td>
+        <% else %>
+          <td><i class="fa fa-question-circle-o" aria-hidden="true"></i></td>
+        <% end %>
         <td><a href="/dashboard/jobs/<%= job.id %>"><%= job.pipeline.name %></a></td>
         <td><%= job.pipeline.description %></td>
         <td bgcolor=<%= @color_by_status[job.status] %> ><%= job.status %></td>

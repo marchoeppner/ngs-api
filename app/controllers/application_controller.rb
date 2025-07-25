@@ -58,6 +58,14 @@ class NGS < Sinatra::Base
     get '/dashboard/jobs/:id' do |id|
         @color_by_status = color_by_status
         @job = NGS::Job.find(id)
+        if @job.depends_on
+            @parent = NGS::Job.find(@job.depends_on)
+        else
+            @child = NGS::Job.find_by_depends_on(@job.id)
+        end
+        @success_message = session[:success_message]
+        session[:success_message] = nil
+
         erb :job
     end
 
@@ -385,24 +393,28 @@ class NGS < Sinatra::Base
     end
 
     get '/jobs/:id/archive' do  |id|
+
+        this_date = Time.now.strftime("%d-%m-%Y")
+
         job = NGS::Job.find(id)
         if !job
             return { "error" => "Job not found"}
         end
 
         pipeline = NGS::Pipeline.find_by_name("archive_job")
+
         if !pipeline
             return { "error" => "Pipeline not found" }
         end
 
-        if !NGS::Job.where(pipeline_id: pipeline.id, job_id: job.id)
-            return { "error" => "Job already exists "}
+        if !NGS::Job.where(pipeline_id: pipeline.id, depends_on: job.id).empty?
+            return "Job already exists"
         end
 
-        command = "#{pipeline.template} --input #{job.run_dir}\nrm -Rf #{job.run_dir}"
+        command = "#{pipeline.template} --input #{job.run_dir} --run_name archive_#{job.run.name}_#{job.id}_#{job.pipeline.name}"
 
         # Create the run directory
-        wpath = "#{settings.pipeline_run_dir}/#{run.name}_#{run.id}/#{pipeline.name}/#{this_date}"
+        wpath = "#{settings.pipeline_run_dir}/#{job.run.name}_#{job.run.id}/#{pipeline.name}/#{this_date}"
         FileUtils.mkdir_p(wpath)
 
         payload = { 
@@ -412,7 +424,8 @@ class NGS < Sinatra::Base
             "status" => "created",
             "date_registered" => this_date,
             "run_id" => job.run.id, 
-            "pipeline_id" => pipeline.id 
+            "pipeline_id" => pipeline.id,
+            "depends_on" => job.id 
         }
     
         ajob = NGS::Job.create(payload)
@@ -424,13 +437,17 @@ class NGS < Sinatra::Base
             session[:success_message] = "No new job created."
         end
 
-        redirect '/dashboard/jobs'
+        redirect "/dashboard/jobs/#{ajob.id}"
 
     end
 
     get '/jobs/:id/delete' do |id|
         job = NGS::Job.find(id)
         if job
+            dependencies = NGS::Job.where(depends_on: id)
+            dependencies.each do |d|
+                d.remove
+            end
             job.remove
             return "Job deleted"
         else

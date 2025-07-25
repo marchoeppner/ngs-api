@@ -48,7 +48,8 @@ pipelines = {
     "gabi_1.2.2" => { "name" => "gabi_1.2.2", "description" => "GABI - Genomic Analysis of Bacterial Isolates", "version" => "1.2.2", "template" => "/work_syn/shared/software/nextflow/nextflow run bio-raum/gabi", "samplesheet_format" => "sample\tplatform\tfq1\tfq2" },
     "foodme2_1.2.0_meat" => { "name" => "foodme2_1.2.0_meat", "description" => "FooDMe2 - Metabarcoding für ASU 184", "version" => "1.2.0", "template" => "/work_syn/shared/software/nextflow/nextflow run bio-raum/FooDMe2 --primer_set amniotes_dobrovolny", "samplesheet_format" => "sample\tfq1\tfq2" },
     "read-qc" =>{ "name" => "readqc_1.0", "runlevel" => true, "description" => "Read-QC - quality control of sequencing runs", "version" => "1.0", "template" => "/work_syn/shared/software/nextflow/nextflow run marchoeppner/read-qc" },
-    "backup" => { "name" => "backup_run", "description" => "Backup of run directory", "version" => "1.0", "template" => "/work_syn/shared/scripts/backup_run_folder", "runlevel" => true  }
+    "backup" => { "name" => "backup_run", "description" => "Backup of run directory", "version" => "1.0", "template" => "/work_syn/shared/scripts/backup_run_folder", "runlevel" => true  },
+    "archive_job" =>{ "name" => "archive_job", "joblevel" => true, "description" => "Archive an analysis job", "version" => "1.0", "template" => "/work_syn/shared/scripts/backup_run_folder --platform analysis" }
 }
 
 pipelines.each do |pipe,info|

@@ -193,21 +193,28 @@ jobs.each do |job|
             payload = { "slurm_id" => job_id, "attempts" => attempts, "status" => "submitted", "date_updated" => this_date }
             rest_post("jobs/#{job['id']}/update", payload)
         end
-    elsif job["status"] == "completed"
+    elsif job["status"] == "completed" && !job["complete"]
         # remove the work directory
         wd = "#{job['run_dir']}/work"
         if File.directory?(wd)
             system("rm -Rf #{wd}")
         end
+
+        payload = { "complete" => true }
         # if no report has been attached to this job, try and do that now
         if !job["report"] && job["command"].include?("nextflow")
             report = find_report(job)
             if report
-                payload = { "report" => report }
-                rest_post("jobs/#{job['id']}/update", payload)
+                payload["report"] = report
             end
         end
-        
+        rest_post("jobs/#{job['id']}/update", payload)
+
+        if job["depends_on"]
+            payload = { "is_archived" => true }
+            rest_post("jobs/#{job['depends_on']}/update", payload)
+        end
+
     end
 end
 
