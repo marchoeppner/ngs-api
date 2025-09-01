@@ -33,7 +33,7 @@ class NGS::Run < ActiveRecord::Base
         data = Dir["#{self.folder}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_L00[0-9]_R[1,2]/)[0]}
         data.each do |lib,reads|
             # group by lane
-            reads.group_by{|r| File.basename(r).slice(/L[0-9]*/) }.each do |b,fastqs|
+            reads.group_by{|r| File.basename(r).slice(/L0[0-9]*/) }.each do |b,fastqs|
                 lane = b.split("L00")[-1]
                 fwd = nil
                 rev = nil
