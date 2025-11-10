@@ -13,6 +13,7 @@ gem "rackup"
 gem "rack-cors"
 gem "rack-contrib"
 gem "puma"
+gem 'pagy'
 
 group :development do
   gem "faker", "~> 2.18"

@@ -19,9 +19,9 @@ end
 
 class NGS < Sinatra::Base
 
-    color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"} 
-
+    color_by_status = { "completed" => "lightgreen", "created" => "lightgray", "submitted" => "LightSteelBlue", "failed" => "Salmon", "running" => "Moccasin", "unknown" => "white", "pending" => "LightSteelBlue"}     
     enable :sessions
+    include Pagy::Method  
 
     configure do
         set :illumina_run_dir, '/work_syn/ngs/runs/miseq'
@@ -44,7 +44,7 @@ class NGS < Sinatra::Base
 
     get '/dashboard' do
         @color_by_status = color_by_status
-        @runs = NGS::Run.all.reverse
+        @pagy, @runs = pagy(NGS::Run.order(date_registered: :desc))
         @pipelines = NGS::Pipeline.where(runlevel: true)
         @success_message = session[:success_message]
         session[:success_message] = nil
@@ -53,7 +53,7 @@ class NGS < Sinatra::Base
 
     get '/dashboard/jobs' do
         @color_by_status = color_by_status
-        @jobs = NGS::Job.all.reverse
+        @pagy, @jobs = pagy(NGS::Job)
         erb :jobs
     end
     get '/dashboard/jobs/:id' do |id|
@@ -474,5 +474,14 @@ class NGS < Sinatra::Base
             job.delete
         end
         "All jobs deleted"
+    end
+
+    private
+    def pagy_get_vars(collection, vars)
+        {
+          count: collection.count,
+          page: params["page"],
+          items: vars[:items] || 25
+        }
     end
 end
