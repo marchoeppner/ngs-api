@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_07_25_085224) do
+ActiveRecord::Schema.define(version: 2025_09_01_104853) do
 
   create_table "jobs", force: :cascade do |t|
     t.string "name"
@@ -51,6 +51,7 @@ ActiveRecord::Schema.define(version: 2025_07_25_085224) do
     t.string "samplesheet_format"
     t.boolean "runlevel", default: false
     t.boolean "joblevel", default: false
+    t.boolean "demux", default: false
     t.index ["name"], name: "uniq_pipeline", unique: true
   end
 
@@ -60,6 +61,7 @@ ActiveRecord::Schema.define(version: 2025_07_25_085224) do
     t.string "description"
     t.string "folder"
     t.date "date_registered"
+    t.string "kit"
   end
 
   create_table "xref_libraries_jobs", force: :cascade do |t|

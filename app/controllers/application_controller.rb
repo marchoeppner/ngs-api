@@ -25,6 +25,7 @@ class NGS < Sinatra::Base
 
     configure do
         set :illumina_run_dir, '/work_syn/ngs/runs/miseq'
+        set :nanopore_run_dir, '/work_syn/ngs/runs/minion'
         set :pipeline_run_dir, '/work_syn/ngs/analyses'
         set :pipeline_profile, 'lsh'
         set :host_authorization, { permitted_hosts: [ "ngs.dashboard", "localhost"] }
@@ -108,6 +109,19 @@ class NGS < Sinatra::Base
             if !run
                 name = dir.split("/")[-1]
                 run = NGS::Run.create({ "folder" => dir, "platform" => "Illumina", "date_registered" => Time.now, "name" => name })
+                run.save
+                answer << run
+                run.register_libraries
+                run.update_description
+            end
+        end
+        dirs = Dir["#{settings.nanopore_run_dir}/*"].select{|f| File.directory?(f) }
+        dirs.each do |dir|
+            # If this run directory has not been added to the database, do it now. 
+            run = NGS::Run.find_by_folder(dir)
+            if !run
+                name = dir.split("/")[-1]
+                run = NGS::Run.create({ "folder" => dir, "platform" => "Nanopore", "date_registered" => Time.now, "name" => name })
                 run.save
                 answer << run
                 run.register_libraries

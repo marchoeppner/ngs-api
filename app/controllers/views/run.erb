@@ -8,6 +8,11 @@
 <tr>
   <td>Folder</td><td><a href='<%= "file://#{@run.folder}"%>' target="_blank"><%= @run.folder %></td>
 </tr>
+<% if @run.kit %>
+<tr>
+  <td>Kit</td><td><%= @run.kit %></td>
+</tr>
+<% end %>
 <tr>
   <td>Libraries</td><td><a href='<%= "/dashboard/runs/#{@run.id}/libraries" %>'><%= @run.libraries.length %></a></td>
 </tr>
