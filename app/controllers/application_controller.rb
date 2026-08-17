@@ -53,12 +53,13 @@ class NGS < Sinatra::Base
 
     get '/dashboard/jobs' do
         @color_by_status = color_by_status
-        @pagy, @jobs = pagy(NGS::Job)
+        @pagy, @jobs = pagy(NGS::Job.order(date_registered: :desc))
         erb :jobs
     end
     get '/dashboard/jobs/:id' do |id|
         @color_by_status = color_by_status
         @job = NGS::Job.find(id)
+        @pipelines = NGS::Pipeline.all
         if @job.depends_on
             @parent = NGS::Job.find(@job.depends_on)
         else
@@ -84,6 +85,16 @@ class NGS < Sinatra::Base
         @color_by_status = color_by_status
         @run = NGS::Run.find(id)
         erb :run
+    end
+
+    get '/dashboard/pipelines' do
+        @pagy, @pipelines = pagy(NGS::Pipeline.order(date_registered: :desc))
+        erb :pipelines
+    end
+
+    get '/dashboard/pipelines/:id/edit' do |id|
+        @pipeline = NGS::Pipeline.find(id)
+        erb :pipelines_edit
     end
 
     get '/dashboard/test/:id' do |id|
@@ -146,10 +157,13 @@ class NGS < Sinatra::Base
         NGS::Run.find(id).to_json
     end
 
+    get '/runs/:id/jobs' do |id|
+        run = NGS::Run.find(id)
+        return run.jobs.to_json
+    end
+
     get '/runs/:id/libraries' do |id|
         NGS::Library.where(run_id: id).to_json
-        @success_message = session[:success_message]
-        session[:success_message] = nil
     end
     
     # scans a registered run to see if libraries need to be added
@@ -256,10 +270,11 @@ class NGS < Sinatra::Base
         # Make the sample sheet
         rows = [ pipeline.samplesheet_format ]
         libraries.each do |lib|
+            lib_name = lib.name.gsub(/_S[0-9]+$.*/, "")
             if pipeline.samplesheet_format.include?("platform")
-                rows << [ lib.name, run.platform.upcase, lib.R1, lib.R2 ].join("\t")
+                rows << [ lib_name, run.platform.upcase, lib.R1, lib.R2 ].join("\t")
             else
-                rows << [ lib.name, lib.R1, lib.R2 ].join("\t")
+                rows << [ lib_name, lib.R1, lib.R2 ].join("\t")
             end
         end
         ss_name = "#{wpath}/samples.tsv"
@@ -347,6 +362,50 @@ class NGS < Sinatra::Base
         { "error" => "Pipeline already exists" }.to_json
     end
 
+    get '/pipelines/:id' do |id|
+        @pipeline = NGS::Pipeline.find(id)
+        return @pipeline.to_json
+    end
+
+    get '/pipelines/:id/edit' do |id|
+        @pipeline = NGS::Pipeline.find(id)
+        if @pipeline
+            redirect "/dashboard/pipelines"
+        else
+            redirect "/dashboard/pipelines/#{@pipeline.id}/edit"
+        end
+    end
+
+    post '/pipelines/:id/edit' do 
+        puts params.inspect
+        @pipeline = NGS::Pipeline.find_by_id(params[:id])
+        if @pipeline
+            #@pipeline.template = params[:template]
+            #@pipeline.joblevel = params[:joblevel]
+            params[:joblevel] == "0" ? job_level = false : job_level = true
+            @pipeline.update(template: params[:template], joblevel: job_level)
+            #@pipeline.save
+            redirect "/dashboard/pipelines"
+        else
+            redirect "/dashboard/pipelines/#{@pipeline.id}/edit"
+        end
+
+    end
+
+    put '/pipelines/:id/edit' do 
+        puts params.inspect
+        @pipeline = NGS::Pipeline.find_by_id(params[:id])
+        if @pipeline
+            @pipeline.template = params[:template]
+            @pipeline.joblevel = params[:joblevel]
+            @pipeline.save
+            redirect "/dashboard/pipelines"
+        else
+            redirect "/dashboard/pipelines/#{@pipeline.id}/edit"
+        end
+
+    end
+
     get '/pipelines/:id/delete' do |id|
         pipe = NGS::Pipeline.find(id)
         if pipe
@@ -397,6 +456,17 @@ class NGS < Sinatra::Base
         end
     end
 
+    put '/pipelines/:id' do |id|
+        pipeline = NGS::Pipeline.find(id)
+        puts.params.inspect
+        if pipeline
+            pipeline.update(params)
+        else
+            { "error" => "Job does not exist"}
+        end
+        redirect '/dashboard/pipelines'
+    end
+
     post '/jobs/:id/update/log' do |id|
         job = NGS::Job.find(id)
         if job
@@ -429,6 +499,62 @@ class NGS < Sinatra::Base
 
         # Create the run directory
         wpath = "#{settings.pipeline_run_dir}/#{job.run.name}_#{job.run.id}/#{pipeline.name}/#{this_date}"
+        FileUtils.mkdir_p(wpath)
+
+        payload = { 
+            "name" => "#{job.id}_#{pipeline.name}_#{this_date}", 
+            "command" => command, 
+            "run_dir" => wpath,
+            "status" => "created",
+            "date_registered" => this_date,
+            "run_id" => job.run.id, 
+            "pipeline_id" => pipeline.id,
+            "depends_on" => job.id 
+        }
+    
+        ajob = NGS::Job.create(payload)
+        ajob.save
+
+        if ajob
+            session[:success_message] = "New job created."
+        else
+            session[:success_message] = "No new job created."
+        end
+
+        redirect "/dashboard/jobs/#{ajob.id}"
+
+    end
+
+    get '/jobs/:id/bfr' do  |id|
+
+        this_date = Time.now.strftime("%d-%m-%Y")
+
+        job = NGS::Job.find(id)
+        if !job
+            return { "error" => "Job not found"}
+        end
+
+        pipeline = NGS::Pipeline.find_by_name("bfr_submit")
+
+        if !pipeline
+            return { "error" => "Pipeline not found" }
+        end
+
+        if !NGS::Job.where(pipeline_id: pipeline.id, depends_on: job.id).empty?
+            return "Job already exists"
+        end
+
+        libraries = params["libs"].map {|lid| NGS::Library.find(lid) }
+        if libraries.empty?
+            return { "error" => "No libraries found"}
+        end
+        
+        sample_names = libraries.map {|l| l.name.gsub(/_S[0-9]+$.*/, "")}
+
+        command = "#{pipeline.template} --samples #{sample_names.join(',')} --input #{job.run_dir}"
+
+        # Create the run directory
+        wpath = "#{settings.pipeline_run_dir}/bfr_submissions/#{job.run.name}_#{job.run.id}/#{this_date}"
         FileUtils.mkdir_p(wpath)
 
         payload = { 

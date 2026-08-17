@@ -41,7 +41,7 @@ class NGS::Run < ActiveRecord::Base
     def register_libraries
 
         if self.platform == "Illumina"
-            data = Dir["#{self.folder}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_L00[0-9]_R[1,2]/)[0]}
+            data = Dir["#{self.folder}/**/*.fastq.gz"].group_by{|f| File.basename(f).split(/_S[0-9]+_L00[0-9]_R[1,2]/)[0]}
             data.each do |lib,reads|
                 # group by lane
                 reads.group_by{|r| File.basename(r).slice(/L0[0-9]*/) }.each do |b,fastqs|

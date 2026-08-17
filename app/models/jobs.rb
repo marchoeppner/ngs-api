@@ -11,6 +11,15 @@ class NGS::Job < ActiveRecord::Base
             end
         end
         if File.directory?(self.run_dir)
+            Dir.chdir(self.run_dir) do |dir|
+                files = Dir["*.*"]
+                # first unlink symlinked files to not delete original data
+                files.each do |file|
+                    if File.symlink?(file)
+                        File.unlink(file)
+                    end
+                end
+            end 
             system("rm -Rf #{self.run_dir}")
         end
         self.destroy

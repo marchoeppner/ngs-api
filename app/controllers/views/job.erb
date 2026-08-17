@@ -39,6 +39,8 @@
   <tr>
     <td>Report</td><td><a href='<%= "file://#{@job.report}"%>' target="_blank">open</td>
   </tr>
+  </table>
+  <table>
   <tr>
     <td>
       <form onsubmit="return confirm('Really remove this job and all results?')" action="/jobs/<%= @job.id %>/delete" method="GET">
@@ -60,12 +62,17 @@
 <% end %>
 </table>
 
+<% if @job.pipeline.name.include?("gabi") %>
+  <form action="/jobs/<%= @job.id %>/bfr" method="GET">
+<% end %>
+
 <% libs = @job.libraries %>
 <% if !libs.empty? %>
   <h3>Libraries included</h3>
 
   <table>
     <tr>
+      <th></th>
       <th>Library ID</th>
       <th>Lane</th>
       <th>R1</th>
@@ -74,6 +81,7 @@
     </tr>
     <% libs.each do |lib| %>
       <tr>
+        <td><input type="checkbox" name="libs[]" value=<%= lib.id %>></td>
         <td><%= lib.name %></td>
         <td><%= lib.lane %></td>
         <td><%= lib.R1 %></td>
@@ -83,5 +91,30 @@
     <% end %>
   </table>
 <% end %>
-  
 
+<% if @job.pipeline.name.include?("gabi") %>
+
+  <input type="button" class="my_form-check-button" onClick="checkAll(true);" value="Check All" />
+  <input type="button" class="my_form-check-button" onClick="checkAll(false);" value="Clear All" />
+
+  <p>
+
+  <button type="submit" class="button-2">BfR Submit</button>
+
+  </form>
+
+  <script>
+  function checkAll(checkEm) {
+      var cbs = document.getElementsByTagName('input');
+
+      for (var i = 0; i < cbs.length; i++) {
+          if (cbs[i].type == 'checkbox') {
+              if (cbs[i].name == 'libs[]') {
+                  cbs[i].checked = checkEm;
+              }
+          }
+      }
+  }
+  </script>
+
+<% end %>

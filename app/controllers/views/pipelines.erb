@@ -1,0 +1,38 @@
+
+<p>
+  <h2>Pipelines</h2>
+</p>
+<table>
+<tr>
+  <th>Name</th>
+  <th>Description</th>
+  <th>Version</th>
+  <th>Template</th>
+  <th>Samplesheet format</th>
+  <th>Run level</th>
+  <th>Job level</th>
+  <th>Demux</th>
+  <th></th>
+</tr>
+<% @pipelines.each do |pipeline| %>
+<tr>
+  <td><%= pipeline.name %></td>
+  <td><%= pipeline.description %></td>
+  <td><%= pipeline.version %></td>
+  <td><%= pipeline.template %></td>
+  <td><%= pipeline.samplesheet_format %></td>
+  <td><%= pipeline.runlevel %></td>
+  <td><%= pipeline.joblevel %></td>
+  <td><%= pipeline.demux %></td>
+  <td><a href='<%= "/dashboard/pipelines/#{pipeline.id}/edit" %>'>Edit</a></td>
+  <td>
+    <form onsubmit="return confirm('Really remove this pipeline and all results?')" action="/pipelines/<%= pipeline.id %>/delete" method="GET">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit" class="button-delete">Delete</button>
+    </form>
+  </td>
+</tr>
+<% end %>
+</table>
+
+<%= @pagy.series_nav %> 

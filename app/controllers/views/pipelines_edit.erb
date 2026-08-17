@@ -1,0 +1,10 @@
+<form action="/pipelines/<%= @pipeline.id %>/edit" method="post" id="edit">
+<input type="hidden" name="_method" value="put">
+    Name: <%=@pipeline.name%> <br>
+    Template: <textarea name="template" rows="2" col="50"><%= @pipeline.template %></textarea><br>
+    <label>
+      Job-level?: <input type="checkbox" name="joblevel" value=<%= @pipeline.joblevel %>>
+    </label>
+    <br>
+  <input type="submit" name="Update" class="btn btn-primary" >
+</form>
